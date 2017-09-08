@@ -17,7 +17,6 @@ import java.io.IOException;
 /**
  * Created by zhengcong on 2017/6/14.
  * 操作selenium的工具类
- *
  */
 public class SeleniumBase {
 
@@ -46,7 +45,6 @@ public class SeleniumBase {
 
     /**
      * 创建基于Headless chrome的无代理的webdriver
-     *
      */
     private static WebDriver createDriver() {
 
@@ -67,31 +65,29 @@ public class SeleniumBase {
     }
 
     /**
-     *
      * 创建开启代理的基于headless chrome的webdriver
-     *
      */
-    private static WebDriver createDriverByProxy(){
+    private static WebDriver createDriverByProxy() {
 
         String proxyHost = "";
         String proxyIp = "";
         //TODO :获取代理
-        String proxIpAndPort = proxyHost+":"+proxyIp;
+        String proxIpAndPort = proxyHost + ":" + proxyIp;
         DesiredCapabilities dec = DesiredCapabilities.chrome();
         Proxy proxy = new Proxy();
         proxy.setHttpProxy(proxIpAndPort).setSslProxy(proxIpAndPort);
-        dec.setCapability(CapabilityType.ForSeleniumServer.AVOIDING_PROXY,true);
-        dec.setCapability(CapabilityType.ForSeleniumServer.ONLY_PROXYING_SELENIUM_TRAFFIC,true);
-        dec.setCapability(CapabilityType.PROXY,proxy);
+        dec.setCapability(CapabilityType.ForSeleniumServer.AVOIDING_PROXY, true);
+        dec.setCapability(CapabilityType.ForSeleniumServer.ONLY_PROXYING_SELENIUM_TRAFFIC, true);
+        dec.setCapability(CapabilityType.PROXY, proxy);
 
-        System.setProperty("webdriver.chrome.driver",CHROME_DRIVER);
+        System.setProperty("webdriver.chrome.driver", CHROME_DRIVER);
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.setBinary(CHROME_PATH);
         chromeOptions.addArguments("test-type");
         chromeOptions.addArguments("headless");
         chromeOptions.addArguments("disable-gpu");
 
-        dec.setCapability(ChromeOptions.CAPABILITY,chromeOptions);
+        dec.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
         dec.setJavascriptEnabled(true);
 
         WebDriver driver = new ChromeDriver(dec);
@@ -114,12 +110,20 @@ public class SeleniumBase {
 
         byte[] bs = ((TakesScreenshot) getCurrentDriver()).getScreenshotAs(OutputType.BYTES);
         if (bs != null && bs.length > 0) {
+            FileOutputStream fileOutputStream = null;
             try {
-                FileOutputStream fileOutputStream = new FileOutputStream(new File(SCREENSHOT_PATH + "/" + System.currentTimeMillis() + ".gif"));
+                fileOutputStream = new FileOutputStream(new File(SCREENSHOT_PATH + "/" + System.currentTimeMillis() + ".gif"));
                 fileOutputStream.write(bs);
                 fileOutputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         }
 
@@ -174,8 +178,9 @@ public class SeleniumBase {
 
     /**
      * 控制webdriver同步执行脚本
-     * @param js  要执行的脚本语句
-     * @param webElement  脚本语句中需要传递的webelement对象
+     *
+     * @param js         要执行的脚本语句
+     * @param webElement 脚本语句中需要传递的webelement对象
      */
     public static void exeuteJS(String js, WebElement webElement) {
 
@@ -191,18 +196,19 @@ public class SeleniumBase {
 
     /**
      * 控制webdriver异步执行脚本
-     * @param js 待执行的脚本
+     *
+     * @param js         待执行的脚本
      * @param webElement 脚本语句中需要传递的webelement对象
      */
-    public static void executeAsyncJS(String js,WebElement webElement){
+    public static void executeAsyncJS(String js, WebElement webElement) {
 
-        if(StringUtils.isEmpty(js)){
+        if (StringUtils.isEmpty(js)) {
             return;
         }
-        if(webElement == null){
-            ((JavascriptExecutor)getCurrentDriver()).executeAsyncScript(js);
-        }else {
-            ((JavascriptExecutor)getCurrentDriver()).executeAsyncScript(js,webElement);
+        if (webElement == null) {
+            ((JavascriptExecutor) getCurrentDriver()).executeAsyncScript(js);
+        } else {
+            ((JavascriptExecutor) getCurrentDriver()).executeAsyncScript(js, webElement);
         }
 
     }
