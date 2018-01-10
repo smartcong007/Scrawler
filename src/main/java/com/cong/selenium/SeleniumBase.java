@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -13,6 +15,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by zhengcong on 2017/6/14.
@@ -26,11 +30,18 @@ public class SeleniumBase {
 
     private static final String SCREENSHOT_PATH = Config.getVal("SCREENSHOT_PATH");
 
+    private static final String current_brower = Config.getVal("CURRENT_BROWER");
+
     public static WebDriver getCurrentDriver() {
 
         if (ThreadDriverHolder.getDriver() == null) {
 
-            WebDriver webDriver = createDriver();
+            WebDriver webDriver = null;
+            if(current_brower.equals("CHROME")){
+                webDriver = createDriver();
+            }else  {
+                webDriver = createDriverByPhantomJS();
+            }
             if (webDriver != null) {
                 ThreadDriverHolder.setDriver(webDriver);
             } else {
@@ -94,6 +105,38 @@ public class SeleniumBase {
         return driver;
 
 
+    }
+
+    /**
+     * 创建基于phantomJS的webdriver
+     */
+    private static WebDriver createDriverByPhantomJS() {
+        WebDriver driver = null;
+        DesiredCapabilities sCaps = new DesiredCapabilities();
+        sCaps.setJavascriptEnabled(true);
+        sCaps.setCapability("takesScreenshot",false);
+        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "userAgent",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11");
+        sCaps.setCapability(CapabilityType.SUPPORTS_ALERTS, true);
+        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, Config.getVal("PHANTOM_PATH"));
+        ArrayList<String> cliArgsCap = new ArrayList<String>();
+        cliArgsCap.add("--web-security=false");
+        cliArgsCap.add("--ssl-protocol=any");
+        cliArgsCap.add("--ignore-ssl-errors=true");
+        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
+        // Control LogLevel for GhostDriver, via CLI arguments
+        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_GHOSTDRIVER_CLI_ARGS, new String[] {
+                "--logLevel=" + "INFO"
+        });
+        driver = new PhantomJSDriver(sCaps);
+        //设置Driver超时等属性
+        driver.manage().timeouts().implicitlyWait(Long.valueOf(Config.getVal("ELEMENT_SEARCH_TIMEOUT")),
+                TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(Long.valueOf(Config.getVal("PAGE_LOAD_TIMEOUT")),
+                TimeUnit.SECONDS);
+        driver.manage().timeouts().setScriptTimeout(Long.valueOf(Config.getVal("SCRIPT_EXECUTE")),
+                TimeUnit.SECONDS);
+        return driver;
     }
 
     public static void quitDriver() {
@@ -213,6 +256,7 @@ public class SeleniumBase {
 
     }
 
+    //给指定web元素作赋值操作
     public static void sendKey(By by, String key) {
 
         WebElement webElement = getCurrentDriver().findElement(by);
@@ -224,6 +268,7 @@ public class SeleniumBase {
 
     }
 
+    //元素点击
     public static void click(By by) {
 
         WebElement webElement = getCurrentDriver().findElement(by);
@@ -236,7 +281,7 @@ public class SeleniumBase {
     }
 
     static {
-
+        //初始化截图保存路径
         File file = new File(SCREENSHOT_PATH);
         if (!file.exists()) {
             file.mkdir();

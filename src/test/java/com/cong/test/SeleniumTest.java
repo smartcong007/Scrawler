@@ -5,9 +5,6 @@ import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
-
 /**
  * Created by zhengcong on 2017/6/14.
  */
@@ -23,35 +20,16 @@ public class SeleniumTest {
         SeleniumBase.sendKey(By.id("kw"), "headless chrome");
         SeleniumBase.takeScreenShot();
 
-        SeleniumBase.click(By.id("su"));
-        if (SeleniumBase.checkElement(webDriver -> webDriver.findElement(By.id("content_right")) != null)) {
-            SeleniumBase.exeuteJS("window.scrollTo(0, document.body.scrollHeight)", null);
-            SeleniumBase.takeScreenShot();
-        }
+//        SeleniumBase.click(By.id("su"));
+//        if (SeleniumBase.checkElement(webDriver -> webDriver.findElement(By.id("content_right")) != null)) {
+//            SeleniumBase.exeuteJS("window.scrollTo(0, document.body.scrollHeight)", null);
+//            SeleniumBase.takeScreenShot();
+//        }
         SeleniumBase.quitDriver();
 
 
     }
 
-    @Test
-    public void test1(){
-
-        FutureTask<Integer> futureTask = new FutureTask<Integer>(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                Thread.sleep(10000);
-                return 1;
-            }
-        });
-        new Thread(futureTask).start();
-        while (!futureTask.isDone()){
-
-            System.out.println("Thread still running!");
-
-        }
-        System.out.println("Thread stops running");
-
-    }
 
 
 }
