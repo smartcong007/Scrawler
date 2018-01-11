@@ -41,6 +41,7 @@ public class SeleniumBase {
                 webDriver = createDriver();
             }else  {
                 webDriver = createDriverByPhantomJS();
+                webDriver.manage().window().maximize();
             }
             if (webDriver != null) {
                 ThreadDriverHolder.setDriver(webDriver);

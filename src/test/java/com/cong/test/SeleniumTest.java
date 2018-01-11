@@ -20,11 +20,11 @@ public class SeleniumTest {
         SeleniumBase.sendKey(By.id("kw"), "headless chrome");
         SeleniumBase.takeScreenShot();
 
-//        SeleniumBase.click(By.id("su"));
-//        if (SeleniumBase.checkElement(webDriver -> webDriver.findElement(By.id("content_right")) != null)) {
-//            SeleniumBase.exeuteJS("window.scrollTo(0, document.body.scrollHeight)", null);
-//            SeleniumBase.takeScreenShot();
-//        }
+        SeleniumBase.click(By.id("su"));
+        if (SeleniumBase.checkElement(webDriver -> webDriver.findElement(By.id("content_right")) != null)) {
+            SeleniumBase.exeuteJS("window.scrollTo(0, document.body.scrollHeight)", null);
+            SeleniumBase.takeScreenShot();
+        }
         SeleniumBase.quitDriver();
 
 
