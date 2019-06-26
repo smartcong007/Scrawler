@@ -3,3 +3,4 @@
 *.iml
 target/
 Scrawler.iml
+*.log
