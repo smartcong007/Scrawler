@@ -1,5 +1,6 @@
 package com.cong.selenium;
 
+import com.cong.common.BrowerTypeEnum;
 import com.cong.util.Config;
 import com.cong.util.ImageUtil;
 import com.google.common.collect.Lists;
@@ -26,6 +27,8 @@ import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
@@ -45,16 +48,19 @@ public class SeleniumBase {
     /**
      * 获取WebDriver
      */
-    public static WebDriver getCurrentDriver() {
+    public static WebDriver getCurrentDriver(String... browerType) {
 
+        final String brower = browerType != null && browerType.length == 1 ? browerType[0] : current_brower;
         if (ThreadDriverHolder.getDriver() == null) {
 
             WebDriver webDriver;
-            if (current_brower.equals("CHROME")) {
+            if (brower.equals(BrowerTypeEnum.GOOGLE_CHROME.getCode())) {
                 webDriver = createDriver();
-            } else {
+            } else if (brower.equals(BrowerTypeEnum.PHANTOM_JS.getCode())) {
                 webDriver = createDriverByPhantomJS();
                 webDriver.manage().window().maximize();
+            } else {
+                throw new IllegalArgumentException("不合法的浏览器类型");
             }
             if (webDriver != null) {
                 webDriver.manage().window().maximize();
@@ -132,6 +138,7 @@ public class SeleniumBase {
         chromeOptions.addArguments("test-type");
         chromeOptions.addArguments("headless");
         chromeOptions.addArguments("disable-gpu");
+        chromeOptions.addArguments("disable-infobars");
 
         dec.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
         dec.setJavascriptEnabled(true);
@@ -242,19 +249,23 @@ public class SeleniumBase {
         //将所有已保存的截屏片段拼接成完整的页面
         ImageUtil.merge(tmps.toArray(new String[tmps.size()]), "gif", filePath);
         //截取完需要删除截屏片段
-        for (String tmp:tmps) {
+        for (String tmp : tmps) {
             new File(tmp).delete();
         }
     }
 
+    /**
+     * 打开指定页面
+     * @param url 页面链接
+     * @param condition 载入页面后需要检查的条件
+     * @param timeOutInSeconds 条件校验超时时间
+     * @return
+     */
     public static boolean openPage(String url, ExpectedCondition<Boolean> condition,
         long timeOutInSeconds) {
 
         try {
-            //
-
             getCurrentDriver().get(url);
-
         } catch (Exception e) {
             //终止等待页面
             if (TimeoutException.class.isInstance(e)) {
@@ -282,10 +293,15 @@ public class SeleniumBase {
         }
     }
 
-    public static Boolean checkElement(ExpectedCondition<Boolean> condition) {
+    /**
+     * 检测元素可见
+     * @param by 待检测元素
+     * @return
+     */
+    public static Boolean checkElementExsist(By by) {
 
         try {
-            new WebDriverWait(getCurrentDriver(), 15).until(condition);
+            new WebDriverWait(getCurrentDriver(), 15).until(ExpectedConditions.visibilityOfElementLocated(by));
             return true;
         } catch (Exception e) {
             if (TimeoutException.class.isInstance(e)) {
@@ -316,7 +332,6 @@ public class SeleniumBase {
 
     /**
      * 控制webdriver异步执行脚本
-     *
      * @param js 待执行的脚本
      * @param webElement 脚本语句中需要传递的webelement对象
      */
@@ -333,9 +348,16 @@ public class SeleniumBase {
 
     }
 
-    //给指定web元素作赋值操作
-    public static void sendKey(By by, CharSequence key) {
 
+    /**
+     * 给元素赋值
+     * @param by 待赋值元素
+     * @param key 赋值
+     */
+    public static void sendKey(By by, CharSequence key) {
+        if (!checkElementExsist(by)) {
+            throw new IllegalStateException("元素未找到");
+        }
         WebElement webElement = getCurrentDriver().findElement(by);
         if (webElement != null) {
             webElement.sendKeys(key);
@@ -345,9 +367,24 @@ public class SeleniumBase {
 
     }
 
-    //元素点击
-    public static void click(By by) {
 
+    /**
+     * 点击元素
+     * @param by 待点击元素
+     * @param elementExpectedCondition 可以指定点击前的校验条件
+     */
+    public static void click(By by, ExpectedCondition elementExpectedCondition) {
+        try {
+            ExpectedCondition<WebElement> condition =
+                elementExpectedCondition == null ? ExpectedConditions.elementToBeClickable(by)
+                    : elementExpectedCondition;
+            new WebDriverWait(getCurrentDriver(), 15).until(condition);
+        } catch (Exception e) {
+            if (e instanceof TimeoutException) {
+                throw new IllegalStateException("等待元素可点击超时");
+            }
+            throw e;
+        }
         WebElement webElement = getCurrentDriver().findElement(by);
         if (webElement != null) {
             webElement.click();
@@ -355,6 +392,33 @@ public class SeleniumBase {
             throw new RuntimeException("元素未找到");
         }
 
+    }
+
+    /**
+     * 根据索引切换iframe
+     * @param frameLocate iframe的索引
+     * @return
+     */
+    public static boolean switchIframe(int frameLocate) {
+        try {
+            new WebDriverWait(getCurrentDriver(), 15)
+                .until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameLocate));
+            return true;
+        } catch (Exception e) {
+            if (e instanceof TimeoutException) {
+                throw new IllegalStateException("切换iframe失败");
+            }
+            throw e;
+        }
+    }
+
+    public static void select(By by, String text) {
+        if (!checkElementExsist(by)) {
+            throw new IllegalStateException("元素未找到");
+        }
+        WebElement webElement = getCurrentDriver().findElement(by);
+        Select select = new Select(webElement);
+        select.selectByVisibleText(text);
     }
 
     static {
