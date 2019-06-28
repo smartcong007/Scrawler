@@ -271,6 +271,7 @@ public class SeleniumBase {
             if (TimeoutException.class.isInstance(e)) {
                 System.out.println(String.format("打开页面%s超时", url));
             }
+            quitDriver();
             throw e;
 
             //在页面加载出错后的期望判断，考虑页面异步未加载完成但不影响页面操作的情况
@@ -285,6 +286,7 @@ public class SeleniumBase {
             return true;
         } catch (Exception e) {
             //终止等待页面
+            quitDriver();
             if (TimeoutException.class.isInstance(e)) {
                 System.out.println(String.format("打开页面%s超时", url));
                 throw e;
@@ -308,6 +310,7 @@ public class SeleniumBase {
                 System.out.println("预期元素未出现在页面中");
                 return false;
             }
+            quitDriver();
             throw e;
         }
 
@@ -356,12 +359,14 @@ public class SeleniumBase {
      */
     public static void sendKey(By by, CharSequence key) {
         if (!checkElementExsist(by)) {
+            quitDriver();
             throw new IllegalStateException("元素未找到");
         }
         WebElement webElement = getCurrentDriver().findElement(by);
         if (webElement != null) {
             webElement.sendKeys(key);
         } else {
+            quitDriver();
             throw new RuntimeException("元素未找到");
         }
 
@@ -380,6 +385,7 @@ public class SeleniumBase {
                     : elementExpectedCondition;
             new WebDriverWait(getCurrentDriver(), 15).until(condition);
         } catch (Exception e) {
+            quitDriver();
             if (e instanceof TimeoutException) {
                 throw new IllegalStateException("等待元素可点击超时");
             }
@@ -389,6 +395,7 @@ public class SeleniumBase {
         if (webElement != null) {
             webElement.click();
         } else {
+            quitDriver();
             throw new RuntimeException("元素未找到");
         }
 
@@ -405,6 +412,7 @@ public class SeleniumBase {
                 .until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameLocate));
             return true;
         } catch (Exception e) {
+            quitDriver();
             if (e instanceof TimeoutException) {
                 throw new IllegalStateException("切换iframe失败");
             }
@@ -414,6 +422,7 @@ public class SeleniumBase {
 
     public static void select(By by, String text) {
         if (!checkElementExsist(by)) {
+            quitDriver();
             throw new IllegalStateException("元素未找到");
         }
         WebElement webElement = getCurrentDriver().findElement(by);
