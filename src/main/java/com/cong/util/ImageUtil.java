@@ -62,7 +62,6 @@ public class ImageUtil {
 
         // 生成新图片
         try {
-            // dst_width = images[0].getWidth();
             BufferedImage ImageNew = new BufferedImage(dst_width, dst_height,
                 BufferedImage.TYPE_INT_RGB);
             int height_i = 0;
