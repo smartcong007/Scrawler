@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.TakesScreenshot;
@@ -192,6 +193,50 @@ public class SeleniumBase {
     }
 
     /**
+     * 获取web元素
+     * @param by
+     * @return
+     */
+    public static WebElement getWebElement(By by) {
+        if (checkElementExsist(by)) {
+            return getCurrentDriver().findElement(by);
+        }else {
+            quitDriver();
+            throw new IllegalStateException("元素未找到");
+        }
+    }
+
+    /**
+     * 获取一组web元素
+     * @param by
+     * @return
+     */
+    public static List<WebElement> getWebElements(By by) {
+        if (checkElementExsist(by)) {
+            return getCurrentDriver().findElements(by);
+        }else {
+            quitDriver();
+            throw new IllegalStateException("元素未找到");
+        }
+    }
+
+    /**
+     * 等待临时弹窗消失
+     * @param by
+     */
+    public static void waitForDialogDisappear(By by) {
+        try {
+            new WebDriverWait(getCurrentDriver(), 15).until(ExpectedConditions.invisibilityOfElementLocated(by));
+        }catch (Exception e) {
+            quitDriver();
+            if (e instanceof TimeoutException) {
+                throw new IllegalStateException("等待弹窗消失超时");
+            }
+            throw e;
+        }
+    }
+
+    /**
      * 截取当前屏幕中的页面
      */
     public static String takeScreenShot() {
@@ -221,7 +266,7 @@ public class SeleniumBase {
     }
 
     /**
-     * 截取全页面
+     * 截取全页面截图
      */
     public static void takeFullScreenShot() {
         WebDriver webDriver = getCurrentDriver();
@@ -241,6 +286,11 @@ public class SeleniumBase {
         while (k * sHeight < height) {
             //每次向下滚动一次就截屏一次
             exeuteJS(String.format(scrollJs, k * sHeight), null);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             tmps.add(takeScreenShot());
             height = ((Long) exeuteJS(jsHeight, null)).intValue();
             k++;
@@ -256,10 +306,10 @@ public class SeleniumBase {
 
     /**
      * 打开指定页面
+     *
      * @param url 页面链接
      * @param condition 载入页面后需要检查的条件
      * @param timeOutInSeconds 条件校验超时时间
-     * @return
      */
     public static boolean openPage(String url, ExpectedCondition<Boolean> condition,
         long timeOutInSeconds) {
@@ -274,8 +324,6 @@ public class SeleniumBase {
             quitDriver();
             throw e;
 
-            //在页面加载出错后的期望判断，考虑页面异步未加载完成但不影响页面操作的情况
-//			return condition.apply(getCurrentWebDriver());
         }
         if (condition == null) {
             return true;
@@ -297,8 +345,8 @@ public class SeleniumBase {
 
     /**
      * 检测元素可见
+     *
      * @param by 待检测元素
-     * @return
      */
     public static Boolean checkElementExsist(By by) {
 
@@ -335,6 +383,7 @@ public class SeleniumBase {
 
     /**
      * 控制webdriver异步执行脚本
+     *
      * @param js 待执行的脚本
      * @param webElement 脚本语句中需要传递的webelement对象
      */
@@ -354,6 +403,7 @@ public class SeleniumBase {
 
     /**
      * 给元素赋值
+     *
      * @param by 待赋值元素
      * @param key 赋值
      */
@@ -364,7 +414,7 @@ public class SeleniumBase {
         }
         WebElement webElement = getCurrentDriver().findElement(by);
         if (webElement != null) {
-            webElement.sendKeys(key);
+            webElement.sendKeys(Keys.HOME, Keys.chord(Keys.SHIFT, Keys.END), key);
         } else {
             quitDriver();
             throw new RuntimeException("元素未找到");
@@ -375,6 +425,7 @@ public class SeleniumBase {
 
     /**
      * 点击元素
+     *
      * @param by 待点击元素
      * @param elementExpectedCondition 可以指定点击前的校验条件
      */
@@ -403,8 +454,8 @@ public class SeleniumBase {
 
     /**
      * 根据索引切换iframe
+     *
      * @param frameLocate iframe的索引
-     * @return
      */
     public static boolean switchIframe(int frameLocate) {
         try {
@@ -420,6 +471,11 @@ public class SeleniumBase {
         }
     }
 
+    /**
+     * 操作Select下拉选择
+     * @param by
+     * @param text
+     */
     public static void select(By by, String text) {
         if (!checkElementExsist(by)) {
             quitDriver();
