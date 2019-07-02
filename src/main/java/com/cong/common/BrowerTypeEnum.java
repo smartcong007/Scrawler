@@ -3,26 +3,21 @@ package com.cong.common;
 /**
  * @Description TODO
  * @Author zheng cong
- * @Date 2019-06-26
+ * @Date 2019-07-02
  */
 public enum BrowerTypeEnum {
 
-    /**
-     * google浏览器
-     */
-    GOOGLE_CHROME("CHROME"),
-    /**
-     * phantomjs
-     */
-    PHANTOM_JS("PHANTOMJS");
+    GOOGLE_CHROME("chrome"),
+
+    PHANTOM_JS("phantom_js");
 
     private String code;
 
-    BrowerTypeEnum(String code) {
-        this.code = code;
-    }
-
     public String getCode() {
         return code;
+    }
+
+    BrowerTypeEnum(String code) {
+        this.code = code;
     }
 }

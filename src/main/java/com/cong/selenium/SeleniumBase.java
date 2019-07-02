@@ -472,7 +472,7 @@ public class SeleniumBase {
     }
 
     /**
-     * 操作Select下拉选择
+     * 操作select下拉选择
      * @param by
      * @param text
      */
