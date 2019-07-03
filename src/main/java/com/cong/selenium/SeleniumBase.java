@@ -154,7 +154,7 @@ public class SeleniumBase {
      * 创建基于phantomJS的webdriver
      */
     private static WebDriver createDriverByPhantomJS() {
-        WebDriver driver = null;
+        WebDriver driver;
         DesiredCapabilities sCaps = new DesiredCapabilities();
         sCaps.setJavascriptEnabled(true);
         sCaps.setCapability("takesScreenshot", false);
