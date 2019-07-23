@@ -1,7 +1,6 @@
 package com.cong.selenium;
 
 import com.cong.common.BrowerTypeEnum;
-import com.cong.util.Config;
 import com.cong.util.ImageUtil;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -38,20 +37,79 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  */
 public class SeleniumBase {
 
-    private static final String CHROME_PATH = Config.getVal("CHROME_PATH");
+    private static String CHROME_PATH;
 
-    private static final String CHROME_DRIVER = Config.getVal("CHROME_DRIVER");
+    private static String CHROME_DRIVER;
 
-    private static final String SCREENSHOT_PATH = Config.getVal("SCREENSHOT_PATH");
+    private static String SCREENSHOT_PATH;
 
-    private static final String current_brower = Config.getVal("CURRENT_BROWER");
+    private static String CURRENT_BROWER;
+
+    private static String PHANTOM_DRIVER;
+
+    private static long ELEMENT_SEARCH_TIMEOUT;
+
+    private static long PAGE_LOAD_TIMEOUT;
+
+    private static long SCRIPT_EXECUTE;
+
+    static {
+        CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+        CHROME_DRIVER = "/Users/dasouche/Downloads/chromedriver";
+        SCREENSHOT_PATH = "/tmp/screenshot";
+        CURRENT_BROWER = "chrome";
+        PHANTOM_DRIVER = "/usr/bin/phantomjs";
+        ELEMENT_SEARCH_TIMEOUT = 10L;
+        PAGE_LOAD_TIMEOUT = 5L;
+        SCRIPT_EXECUTE = 10L;
+    }
+
+
+    public static void chromePath(String chromePath) {
+        CHROME_PATH = chromePath;
+    }
+
+    public static void chromeDriver(String chromeDriver) {
+        CHROME_DRIVER = chromeDriver;
+    }
+
+    public static void screenshotPath(String screenshotPath) {
+        SCREENSHOT_PATH = screenshotPath;
+    }
+
+    public static void currentBrower(String currentBrower) {
+        CURRENT_BROWER = currentBrower;
+    }
+
+    public static void phantomDriver(String phantomDriver) {
+        PHANTOM_DRIVER = phantomDriver;
+    }
+
+    public static void elementSearchTimeout(long elementSearchTimeout) {
+        ELEMENT_SEARCH_TIMEOUT = elementSearchTimeout;
+    }
+
+    public static void pageLoadTimeout(long pageLoadTimeout) {
+        PAGE_LOAD_TIMEOUT = pageLoadTimeout;
+    }
+
+    public static void scriptExecute(long scriptExecute) {
+        SCRIPT_EXECUTE = scriptExecute;
+    }
+
+    public static void reinitDriver() {
+        quitDriver();
+        if (getCurrentDriver() == null) {
+            throw new IllegalStateException("driver初始化失败");
+        }
+    }
 
     /**
      * 获取WebDriver
      */
     public static WebDriver getCurrentDriver(String... browerType) {
 
-        final String brower = browerType != null && browerType.length == 1 ? browerType[0] : current_brower;
+        final String brower = browerType != null && browerType.length == 1 ? browerType[0] : CURRENT_BROWER;
         if (ThreadDriverHolder.getDriver() == null) {
 
             WebDriver webDriver;
@@ -104,9 +162,9 @@ public class SeleniumBase {
         //忽略证书错误
         options.addArguments("test-type");
         // 开启无头模式的关键设置
-//        options.addArguments("headless");
+        options.addArguments("headless");
         //避免现阶段headless chrome可能引发的错误，后期可以去掉此项
-//        options.addArguments("disable-gpu");
+        options.addArguments("disable-gpu");
         //允许selenium执行javascript脚本
         dec.setJavascriptEnabled(true);
         dec.setCapability(ChromeOptions.CAPABILITY, options);
@@ -161,7 +219,7 @@ public class SeleniumBase {
         sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "userAgent",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11");
         sCaps.setCapability(CapabilityType.SUPPORTS_ALERTS, true);
-        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, Config.getVal("PHANTOM_PATH"));
+        sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOM_DRIVER);
         ArrayList<String> cliArgsCap = new ArrayList<String>();
         cliArgsCap.add("--web-security=false");
         cliArgsCap.add("--ssl-protocol=any");
@@ -173,11 +231,11 @@ public class SeleniumBase {
         });
         driver = new PhantomJSDriver(sCaps);
         //设置Driver超时等属性
-        driver.manage().timeouts().implicitlyWait(Long.valueOf(Config.getVal("ELEMENT_SEARCH_TIMEOUT")),
+        driver.manage().timeouts().implicitlyWait(ELEMENT_SEARCH_TIMEOUT,
             TimeUnit.SECONDS);
-        driver.manage().timeouts().pageLoadTimeout(Long.valueOf(Config.getVal("PAGE_LOAD_TIMEOUT")),
+        driver.manage().timeouts().pageLoadTimeout(PAGE_LOAD_TIMEOUT,
             TimeUnit.SECONDS);
-        driver.manage().timeouts().setScriptTimeout(Long.valueOf(Config.getVal("SCRIPT_EXECUTE")),
+        driver.manage().timeouts().setScriptTimeout(SCRIPT_EXECUTE,
             TimeUnit.SECONDS);
         return driver;
     }
@@ -194,40 +252,33 @@ public class SeleniumBase {
 
     /**
      * 获取web元素
-     * @param by
-     * @return
      */
     public static WebElement getWebElement(By by) {
         if (checkElementExsist(by)) {
             return getCurrentDriver().findElement(by);
-        }else {
-            quitDriver();
-            throw new IllegalStateException("元素未找到");
+        } else {
+            return null;
         }
     }
 
     /**
      * 获取一组web元素
-     * @param by
-     * @return
      */
     public static List<WebElement> getWebElements(By by) {
         if (checkElementExsist(by)) {
             return getCurrentDriver().findElements(by);
-        }else {
-            quitDriver();
-            throw new IllegalStateException("元素未找到");
+        } else {
+            return null;
         }
     }
 
     /**
      * 等待临时弹窗消失
-     * @param by
      */
     public static void waitForDialogDisappear(By by) {
         try {
             new WebDriverWait(getCurrentDriver(), 15).until(ExpectedConditions.invisibilityOfElementLocated(by));
-        }catch (Exception e) {
+        } catch (Exception e) {
             quitDriver();
             if (e instanceof TimeoutException) {
                 throw new IllegalStateException("等待弹窗消失超时");
@@ -473,8 +524,6 @@ public class SeleniumBase {
 
     /**
      * 操作select下拉选择
-     * @param by
-     * @param text
      */
     public static void select(By by, String text) {
         if (!checkElementExsist(by)) {

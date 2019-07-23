@@ -26,7 +26,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
  */
 public class SeleniumTest {
 
-
     @Test
     public void test() {
 
@@ -119,7 +118,7 @@ public class SeleniumTest {
         waitForDialogDisappear(By.id("TLoading"));
         //先反选所有年份
         List<WebElement> years = getWebElements(By.xpath("//input[@name='chklYearType'][@type='checkbox']"));
-        for (WebElement year:years) {
+        for (WebElement year : years) {
             if (year.isSelected()) {
                 year.click();
             }
@@ -170,6 +169,33 @@ public class SeleniumTest {
         //*[@id="listInfo"]/tr[2]/td[1]/div/label
         //*[@id="listInfo"]/tr[2]/td[4]/input
         //*[@id="listInfo"]/tr[2]/td[7]/select
+
+    }
+
+    @Test
+    public void testIT() {
+        StringBuilder stringBuilder = new StringBuilder();
+        openPage("https://www.ithome.com/",
+            webDriver -> webDriver.findElement(By.xpath("//*[@id=\"con\"]/div[4]/div[2]/div[3]/div[1]/ul/li[1]/a"))
+                != null, 15);
+        int page = 1;
+        while (page<=5) {
+            click(By.xpath(String.format("//span[@class='page_num']/a[%d]", page)), null);
+            List<WebElement> lis = getWebElements(By.xpath("//*[@id=\"con\"]/div[4]/div[2]/div[3]/div[2]/div[1]/div[2]/ul/li"));
+            if (lis != null && lis.size() > 0) {
+                for (WebElement li : lis) {
+                    List<WebElement> spans = li.findElements(By.tagName("span"));
+                    if (spans !=null&&spans.size()>0) {
+                        WebElement date = spans.get(0);
+                        WebElement title = spans.get(1);
+                        if (date.getText().equals("今日")) {
+                            stringBuilder.append(title.findElement(By.tagName("a")).getText()+"\n\r");
+                        }
+                    }
+                }
+            }
+            page++;
+        }
 
     }
 
