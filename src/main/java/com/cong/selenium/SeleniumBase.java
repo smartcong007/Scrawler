@@ -55,10 +55,10 @@ public class SeleniumBase {
 
     static {
         CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-        CHROME_DRIVER = "/Users/dasouche/Downloads/chromedriver";
+        CHROME_DRIVER = "/Users/11108854/chromedriver/chromedriver";
         SCREENSHOT_PATH = "/tmp/screenshot";
         CURRENT_BROWER = "chrome";
-        PHANTOM_DRIVER = "/usr/bin/phantomjs";
+        PHANTOM_DRIVER = "/Users/11108854/phantomjs";
         ELEMENT_SEARCH_TIMEOUT = 10L;
         PAGE_LOAD_TIMEOUT = 5L;
         SCRIPT_EXECUTE = 10L;
